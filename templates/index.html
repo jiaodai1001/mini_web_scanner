@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mini Web Scanner</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .high {
+            color: red;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .low {
+            color: green;
+            font-weight: bold;
+        }
+
+        .box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 60%;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Web Vulnerability Scanner</h1>
+
+    <form method="POST">
+        <input type="text" name="url" placeholder="Enter target URL" style="width:300px;">
+        <button type="submit">Start Scan</button>
+    </form>
+
+    {% if result %}
+        <p>{{ result }}</p>
+    {% endif %}
+
+    {% if report %}
+
+        <!-- 总览 -->
+        <div class="box">
+            <h2>Scan Summary</h2>
+
+            <table>
+                <tr>
+                    <th>Vulnerability</th>
+                    <th>Risk</th>
+                    <th>Count</th>
+                </tr>
+
+                <tr>
+                    <td>SQL Injection</td>
+                    <td class="{{ 'high' if report.sql_injection.risk == 'HIGH' else 'low' }}">
+                        {{ report.sql_injection.risk }}
+                    </td>
+                    <td>{{ report.sql_injection.count }}</td>
+                </tr>
+
+                <tr>
+                    <td>XSS</td>
+                    <td class="{{ 'high' if report.xss.risk == 'HIGH' else 'low' }}">
+                        {{ report.xss.risk }}
+                    </td>
+                    <td>{{ report.xss.count }}</td>
+                </tr>
+
+                <tr>
+                    <td>Directory</td>
+                    <td class="{{ 'medium' if report.directories.risk == 'MEDIUM' else 'low' }}">
+                        {{ report.directories.risk }}
+                    </td>
+                    <td>{{ report.directories.count }}</td>
+                </tr>
+
+                <tr>
+                    <td>Headers</td>
+                    <td class="{{ 'medium' if report.headers.risk == 'MEDIUM' else 'low' }}">
+                        {{ report.headers.risk }}
+                    </td>
+                    <td>{{ report.headers.count }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 详细结果 -->
+
+        <!-- SQL -->
+        <div class="box">
+            <h3 class="{{ 'high' if report.sql_injection.risk == 'HIGH' else 'low' }}">
+                SQL Injection Details
+            </h3>
+
+            {% if report.sql_injection.details %}
+                <ul>
+                {% for item in report.sql_injection.details %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>✔ No vulnerabilities found</p>
+            {% endif %}
+        </div>
+
+        <!-- XSS -->
+        <div class="box">
+            <h3 class="{{ 'high' if report.xss.risk == 'HIGH' else 'low' }}">
+                XSS Details
+            </h3>
+
+            {% if report.xss.details %}
+                <ul>
+                {% for item in report.xss.details %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>✔ No vulnerabilities found</p>
+            {% endif %}
+        </div>
+
+        <!-- Directory -->
+        <div class="box">
+            <h3 class="{{ 'medium' if report.directories.risk == 'MEDIUM' else 'low' }}">
+                Directory Scan Details
+            </h3>
+
+            {% if report.directories.details %}
+                <ul>
+                {% for item in report.directories.details %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>✔ No sensitive directories found</p>
+            {% endif %}
+        </div>
+
+        <!-- Headers -->
+        <div class="box">
+            <h3 class="{{ 'medium' if report.headers.risk == 'MEDIUM' else 'low' }}">
+                Security Headers Details
+            </h3>
+
+            {% if report.headers.details %}
+                <ul>
+                {% for item in report.headers.details %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>✔ All important security headers are present</p>
+            {% endif %}
+        </div>
+
+        <!-- 下载按钮 -->
+        <div class="box">
+            <h3>Export Report</h3>
+            <a href="/download">
+                <button>Download JSON Report</button>
+            </a>
+        </div>
+
+    {% endif %}
+
+</body>
+</html>
