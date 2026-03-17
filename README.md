@@ -110,6 +110,15 @@ F --> G3[Web页面展示]
 ### 工作流程
 <img src="images/mermaid_diagram.png" width="150">
 
+```mermaid
+flowchart TD
+A[输入目标URL] --> B[爬取页面]
+B --> C[提取URL参数]
+C --> D[执行插件扫描]
+D --> E[收集漏洞结果]
+E --> F[生成扫描报告]
+F --> G[Web展示 / 下载报告]
+```
 ---
 
 ## 七、主要功能
