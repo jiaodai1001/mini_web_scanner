@@ -107,9 +107,6 @@ F --> G3[Web页面展示]
 
 ## 六、工作流程
 
-### 工作流程
-<img src="images/mermaid_diagram.png" width="150">
-
 ```mermaid
 flowchart TD
 A[输入目标URL] --> B[爬取页面]
