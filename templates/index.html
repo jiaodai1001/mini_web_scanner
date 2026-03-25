@@ -1,197 +1,646 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
+    <meta charset="UTF-8">
     <title>Mini Web Scanner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg: #0a0c0f;
+            --surface: #111418;
+            --border: #1e2530;
+            --accent: #00e5ff;
+            --accent2: #ff4d6d;
+            --warn: #ffb700;
+            --ok: #00e676;
+            --text: #c8d6e5;
+            --text-dim: #4a5a6a;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: Arial;
-            margin: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            min-height: 100vh;
+            padding: 40px 24px 80px;
         }
 
-        h1 {
-            color: #333;
+        /* ─── Header ─── */
+        .header {
+            max-width: 860px;
+            margin: 0 auto 40px;
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
         }
 
-        .high {
-            color: red;
-            font-weight: bold;
+        .header h1 {
+            font-family: var(--sans);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #fff;
         }
 
-        .medium {
-            color: orange;
-            font-weight: bold;
+        .header .tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 2px 7px;
+            border-radius: 3px;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
         }
 
-        .low {
-            color: green;
-            font-weight: bold;
+        /* ─── Scan Form ─── */
+        .scan-form {
+            max-width: 860px;
+            margin: 0 auto 32px;
+            display: flex;
+            gap: 10px;
         }
 
-        .box {
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 5px;
+        .scan-form input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            padding: 12px 16px;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
-        table {
-            border-collapse: collapse;
-            width: 60%;
-            margin-top: 10px;
+        .scan-form input::placeholder { color: var(--text-dim); }
+        .scan-form input:focus { border-color: var(--accent); }
+
+        .btn-scan {
+            background: var(--accent);
+            color: #000;
+            font-family: var(--sans);
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            white-space: nowrap;
         }
 
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
+        .btn-scan:hover { opacity: 0.85; }
+        .btn-scan:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* ─── Progress Panel ─── */
+        .panel {
+            max-width: 860px;
+            margin: 0 auto 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            display: none;
         }
 
-        th {
-            background-color: #f2f2f2;
+        .panel.visible { display: block; }
+
+        .panel-title {
+            font-family: var(--sans);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 14px;
         }
+
+        /* Progress bar */
+        .progress-wrap {
+            background: var(--border);
+            border-radius: 4px;
+            height: 4px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #00b0cc);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* Stage steps */
+        .stages {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .stage-chip {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .stage-chip.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0,229,255,0.07);
+        }
+
+        .stage-chip.done {
+            border-color: var(--ok);
+            color: var(--ok);
+            background: rgba(0,230,118,0.06);
+        }
+
+        /* Log stream */
+        .log-stream {
+            font-size: 0.75rem;
+            line-height: 1.8;
+            color: var(--text-dim);
+            min-height: 24px;
+        }
+
+        .log-stream .log-line {
+            display: flex;
+            gap: 10px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .log-stream .log-line .ts { color: #2a3540; }
+        .log-stream .log-line .msg { color: var(--text); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── Results ─── */
+        .results-panel {
+            max-width: 860px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .results-panel.visible { display: block; }
+
+        /* Summary grid */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .summary-card.high::before  { background: var(--accent2); }
+        .summary-card.medium::before { background: var(--warn); }
+        .summary-card.low::before   { background: var(--ok); }
+
+        .summary-card .card-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .summary-card .card-count {
+            font-family: var(--sans);
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .summary-card.high  .card-count { color: var(--accent2); }
+        .summary-card.medium .card-count { color: var(--warn); }
+        .summary-card.low   .card-count { color: var(--ok); }
+
+        .summary-card .card-risk {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+
+        .summary-card.high  .card-risk { color: var(--accent2); }
+        .summary-card.medium .card-risk { color: var(--warn); }
+        .summary-card.low   .card-risk { color: var(--ok); }
+
+        /* Detail sections */
+        .detail-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-header:hover { background: rgba(255,255,255,0.02); }
+
+        .detail-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 3px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .badge-high   { background: rgba(255,77,109,0.15); color: var(--accent2); }
+        .badge-medium { background: rgba(255,183,0,0.12);  color: var(--warn); }
+        .badge-low    { background: rgba(0,230,118,0.1);   color: var(--ok); }
+
+        .detail-title {
+            font-family: var(--sans);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #fff;
+            flex: 1;
+        }
+
+        .detail-toggle {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            transition: transform 0.2s;
+        }
+
+        .detail-section.open .detail-toggle { transform: rotate(180deg); }
+
+        .detail-body {
+            display: none;
+            padding: 16px 20px;
+        }
+
+        .detail-section.open .detail-body { display: block; }
+
+        .detail-body ul {
+            list-style: none;
+        }
+
+        .detail-body ul li {
+            font-size: 0.75rem;
+            color: var(--text);
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-body ul li:last-child { border-bottom: none; }
+        .detail-body ul li::before { content: '›'; color: var(--accent); flex-shrink: 0; }
+
+        .detail-body .empty {
+            font-size: 0.75rem;
+            color: var(--ok);
+        }
+
+        /* Download */
+        .download-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .btn-download {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            padding: 9px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-download:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Error banner */
+        .error-banner {
+            max-width: 860px;
+            margin: 0 auto 24px;
+            background: rgba(255,77,109,0.1);
+            border: 1px solid var(--accent2);
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 0.8rem;
+            color: var(--accent2);
+            display: none;
+        }
+
+        .error-banner.visible { display: block; }
     </style>
 </head>
 
 <body>
 
-    <h1>Web Vulnerability Scanner</h1>
+    <div class="header">
+        <h1>Web Vulnerability Scanner</h1>
+        <span class="tag">MINI</span>
+    </div>
 
-    <form method="POST">
-        <input type="text" name="url" placeholder="Enter target URL" style="width:300px;">
-        <button type="submit">Start Scan</button>
-    </form>
+    <!-- Input -->
+    <div class="scan-form">
+        <input type="text" id="urlInput" placeholder="https://example.com" autocomplete="off">
+        <button class="btn-scan" id="btnScan" onclick="startScan()">Start Scan</button>
+    </div>
 
-    {% if result %}
-        <p>{{ result }}</p>
-    {% endif %}
+    <!-- Error -->
+    <div class="error-banner" id="errorBanner"></div>
 
-    {% if report %}
+    <!-- Progress -->
+    <div class="panel" id="progressPanel">
+        <div class="panel-title">Scan Progress</div>
 
-        <!-- 总览 -->
-        <div class="box">
-            <h2>Scan Summary</h2>
-
-            <table>
-                <tr>
-                    <th>Vulnerability</th>
-                    <th>Risk</th>
-                    <th>Count</th>
-                </tr>
-
-                <tr>
-                    <td>SQL Injection</td>
-                    <td class="{{ 'high' if report.sql_injection.risk == 'HIGH' else 'low' }}">
-                        {{ report.sql_injection.risk }}
-                    </td>
-                    <td>{{ report.sql_injection.count }}</td>
-                </tr>
-
-                <tr>
-                    <td>XSS</td>
-                    <td class="{{ 'high' if report.xss.risk == 'HIGH' else 'low' }}">
-                        {{ report.xss.risk }}
-                    </td>
-                    <td>{{ report.xss.count }}</td>
-                </tr>
-
-                <tr>
-                    <td>Directory</td>
-                    <td class="{{ 'medium' if report.directories.risk == 'MEDIUM' else 'low' }}">
-                        {{ report.directories.risk }}
-                    </td>
-                    <td>{{ report.directories.count }}</td>
-                </tr>
-
-                <tr>
-                    <td>Headers</td>
-                    <td class="{{ 'medium' if report.headers.risk == 'MEDIUM' else 'low' }}">
-                        {{ report.headers.risk }}
-                    </td>
-                    <td>{{ report.headers.count }}</td>
-                </tr>
-            </table>
+        <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar"></div>
         </div>
 
-        <!-- 详细结果 -->
-
-        <!-- SQL -->
-        <div class="box">
-            <h3 class="{{ 'high' if report.sql_injection.risk == 'HIGH' else 'low' }}">
-                SQL Injection Details
-            </h3>
-
-            {% if report.sql_injection.details %}
-                <ul>
-                {% for item in report.sql_injection.details %}
-                    <li>{{ item }}</li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p>✔ No vulnerabilities found</p>
-            {% endif %}
+        <div class="stages" id="stagesRow">
+            <div class="stage-chip" data-stage="crawler">Crawler</div>
+            <div class="stage-chip" data-stage="params">Parameters</div>
+            <div class="stage-chip" data-stage="plugins">Plugins</div>
+            <div class="stage-chip" data-stage="scan">Scanning</div>
+            <div class="stage-chip" data-stage="report">Report</div>
         </div>
 
-        <!-- XSS -->
-        <div class="box">
-            <h3 class="{{ 'high' if report.xss.risk == 'HIGH' else 'low' }}">
-                XSS Details
-            </h3>
+        <div class="log-stream" id="logStream"></div>
+    </div>
 
-            {% if report.xss.details %}
-                <ul>
-                {% for item in report.xss.details %}
-                    <li>{{ item }}</li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p>✔ No vulnerabilities found</p>
-            {% endif %}
-        </div>
-
-        <!-- Directory -->
-        <div class="box">
-            <h3 class="{{ 'medium' if report.directories.risk == 'MEDIUM' else 'low' }}">
-                Directory Scan Details
-            </h3>
-
-            {% if report.directories.details %}
-                <ul>
-                {% for item in report.directories.details %}
-                    <li>{{ item }}</li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p>✔ No sensitive directories found</p>
-            {% endif %}
-        </div>
-
-        <!-- Headers -->
-        <div class="box">
-            <h3 class="{{ 'medium' if report.headers.risk == 'MEDIUM' else 'low' }}">
-                Security Headers Details
-            </h3>
-
-            {% if report.headers.details %}
-                <ul>
-                {% for item in report.headers.details %}
-                    <li>{{ item }}</li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p>✔ All important security headers are present</p>
-            {% endif %}
-        </div>
-
-        <!-- 下载按钮 -->
-        <div class="box">
-            <h3>Export Report</h3>
-            <a href="/download">
-                <button>Download JSON Report</button>
-            </a>
-        </div>
-
-    {% endif %}
+    <!-- Results -->
+    <div class="results-panel" id="resultsPanel"></div>
 
 </body>
+
+<script>
+    let _evtSource = null;
+
+    function startScan() {
+        const url = document.getElementById('urlInput').value.trim();
+        if (!url) return;
+
+        // 重置 UI
+        setError(null);
+        showResults(null);
+        resetProgress();
+
+        document.getElementById('btnScan').disabled = true;
+        document.getElementById('progressPanel').classList.add('visible');
+
+        // 关闭旧 SSE 连接
+        if (_evtSource) { _evtSource.close(); _evtSource = null; }
+
+        // 1. POST 启动扫描，获取 scan_id
+        fetch('/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { setError(data.error); return; }
+            subscribeProgress(data.scan_id);
+        })
+        .catch(err => setError('Failed to start scan: ' + err));
+    }
+
+    function subscribeProgress(scanId) {
+        _evtSource = new EventSource(`/progress/${scanId}`);
+
+        _evtSource.addEventListener('progress', e => {
+            const d = JSON.parse(e.data);
+            updateProgress(d.stage, d.message, d.percent);
+        });
+
+        _evtSource.addEventListener('done', e => {
+            _evtSource.close();
+            _evtSource = null;
+
+            updateProgress('report', 'Scan complete!', 100);
+            markAllDone();
+
+            const report = JSON.parse(e.data);
+            setTimeout(() => showResults(report), 400);
+            document.getElementById('btnScan').disabled = false;
+        });
+
+        _evtSource.addEventListener('error', e => {
+            _evtSource.close();
+            _evtSource = null;
+
+            let msg = 'An error occurred during the scan.';
+            try { msg = JSON.parse(e.data).message; } catch(_) {}
+            setError(msg);
+            document.getElementById('btnScan').disabled = false;
+        });
+
+        _evtSource.onerror = () => {
+            // 连接断开（非 error 事件）时触发
+            if (_evtSource && _evtSource.readyState === EventSource.CLOSED) {
+                document.getElementById('btnScan').disabled = false;
+            }
+        };
+    }
+
+    // ─── Progress Helpers ───
+
+    function resetProgress() {
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('logStream').innerHTML = '';
+        document.querySelectorAll('.stage-chip').forEach(c => {
+            c.classList.remove('active', 'done');
+        });
+    }
+
+    const _stageOrder = ['crawler', 'params', 'plugins', 'scan', 'report'];
+
+    function updateProgress(stage, message, percent) {
+        // Bar
+        document.getElementById('progressBar').style.width = percent + '%';
+
+        // Stage chips
+        const idx = _stageOrder.indexOf(stage);
+        document.querySelectorAll('.stage-chip').forEach((chip, i) => {
+            const s = chip.dataset.stage;
+            const si = _stageOrder.indexOf(s);
+            chip.classList.remove('active', 'done');
+            if (si < idx) chip.classList.add('done');
+            else if (si === idx) chip.classList.add('active');
+        });
+
+        // Log line
+        const log = document.getElementById('logStream');
+        const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.innerHTML = `<span class="ts">${now}</span><span class="msg">${escHtml(message)}</span>`;
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function markAllDone() {
+        document.querySelectorAll('.stage-chip').forEach(c => {
+            c.classList.remove('active');
+            c.classList.add('done');
+        });
+    }
+
+    // ─── Results Renderer ───
+
+    function showResults(report) {
+        const panel = document.getElementById('resultsPanel');
+
+        if (!report) {
+            panel.classList.remove('visible');
+            panel.innerHTML = '';
+            return;
+        }
+
+        const sections = [
+            { key: 'sql_injection', label: 'SQL Injection', emptyMsg: 'No SQL injection vulnerabilities detected.' },
+            { key: 'xss',           label: 'XSS',           emptyMsg: 'No XSS vulnerabilities detected.' },
+            { key: 'directories',   label: 'Directory Scan',emptyMsg: 'No sensitive directories found.' },
+            { key: 'headers',       label: 'Security Headers', emptyMsg: 'All important security headers are present.' },
+        ];
+
+        // Summary cards
+        let cardsHtml = '<div class="summary-grid">';
+        sections.forEach(s => {
+            const data = report[s.key] || {};
+            const risk = (data.risk || 'LOW').toUpperCase();
+            const cls = risk === 'HIGH' ? 'high' : risk === 'MEDIUM' ? 'medium' : 'low';
+            cardsHtml += `
+                <div class="summary-card ${cls}">
+                    <div class="card-label">${s.label}</div>
+                    <div class="card-count">${data.count ?? 0}</div>
+                    <div class="card-risk">${risk}</div>
+                </div>`;
+        });
+        cardsHtml += '</div>';
+
+        // Detail sections
+        let detailHtml = '';
+        sections.forEach(s => {
+            const data = report[s.key] || {};
+            const risk = (data.risk || 'LOW').toUpperCase();
+            const badgeCls = risk === 'HIGH' ? 'badge-high' : risk === 'MEDIUM' ? 'badge-medium' : 'badge-low';
+            const details = data.details || [];
+
+            let bodyHtml;
+            if (details.length === 0) {
+                bodyHtml = `<p class="empty">✔ ${s.emptyMsg}</p>`;
+            } else {
+                bodyHtml = '<ul>' + details.map(d => `<li>${escHtml(String(d))}</li>`).join('') + '</ul>';
+            }
+
+            detailHtml += `
+                <div class="detail-section" onclick="toggleSection(this)">
+                    <div class="detail-header">
+                        <span class="detail-badge ${badgeCls}">${risk}</span>
+                        <span class="detail-title">${s.label}</span>
+                        <span class="detail-toggle">▼</span>
+                    </div>
+                    <div class="detail-body">${bodyHtml}</div>
+                </div>`;
+        });
+
+        const downloadHtml = `
+            <div class="download-row">
+                <a href="/download" class="btn-download">↓ Download JSON Report</a>
+            </div>`;
+
+        panel.innerHTML = cardsHtml + detailHtml + downloadHtml;
+        panel.classList.add('visible');
+
+        // Auto-open HIGH sections
+        panel.querySelectorAll('.detail-section').forEach(sec => {
+            if (sec.querySelector('.badge-high')) {
+                sec.classList.add('open');
+            }
+        });
+    }
+
+    function toggleSection(el) {
+        el.classList.toggle('open');
+    }
+
+    // ─── Error ───
+
+    function setError(msg) {
+        const banner = document.getElementById('errorBanner');
+        if (!msg) {
+            banner.classList.remove('visible');
+            banner.textContent = '';
+        } else {
+            banner.textContent = '⚠ ' + msg;
+            banner.classList.add('visible');
+            document.getElementById('progressPanel').classList.remove('visible');
+        }
+    }
+
+    // ─── Util ───
+
+    function escHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Enter key support
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('urlInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') startScan();
+        });
+    });
+</script>
+
 </html>
