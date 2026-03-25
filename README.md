@@ -1,4 +1,3 @@
-
 # 🔍 Mini Web Vulnerability Scanner
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
@@ -16,6 +15,8 @@ Mini Web Vulnerability Scanner 是一个基于 Python 实现的轻量级 Web 安
 
 系统通过爬虫技术获取目标页面，并结合插件化检测机制，对常见 Web 漏洞进行扫描与分析，同时生成结构化报告并提供 Web 可视化展示。
 
+扫描过程采用异步架构，前端通过 SSE（Server-Sent Events）实时接收扫描进度，无需等待扫描完成即可看到逐步更新的结果。
+
 本项目适用于：
 
 - Web 安全教学实验  
@@ -28,10 +29,13 @@ Mini Web Vulnerability Scanner 是一个基于 Python 实现的轻量级 Web 安
 ## 二、项目演示
 
 ### Web 扫描界面
-![scan demo](images/scan.png)
+![Web扫描界面](images/scan_ui.png)
+
+### 实时扫描进度
+![实时扫描进度](images/scan_progress.png)
 
 ### 扫描结果展示
-![result demo](images/result.png)
+![扫描结果展示](images/scan_result.png)
 
 ---
 
@@ -109,13 +113,17 @@ F --> G3[Web页面展示]
 
 ```mermaid
 flowchart TD
-A[输入目标URL] --> B[爬取页面]
-B --> C[提取URL参数]
-C --> D[执行插件扫描]
-D --> E[收集漏洞结果]
-E --> F[生成扫描报告]
-F --> G[Web展示 / 下载报告]
+A[输入目标URL] --> B[AJAX 提交扫描请求]
+B --> C[后台线程异步扫描]
+C --> D1[爬取页面]
+D1 --> D2[提取URL参数]
+D2 --> D3[执行插件扫描]
+D3 --> D4[收集漏洞结果]
+D4 --> E[生成扫描报告]
+C -->|SSE 实时推送进度| F[前端进度条 & 日志流]
+E --> G[Web展示 / 下载报告]
 ```
+
 ---
 
 ## 七、主要功能
@@ -174,9 +182,10 @@ scan_report.json
 提供 Web 页面：
 
 * 输入目标 URL
-* 启动扫描
-* 实时展示结果
-* 下载报告
+* 一键启动扫描（AJAX 异步提交，无页面刷新）
+* **实时进度条与日志流**（SSE 推送，逐插件更新）
+* 扫描完成后动态渲染结果，HIGH 风险项自动展开
+* 下载 JSON 报告
 
 ---
 
@@ -186,9 +195,9 @@ scan_report.json
 miniwebscanner
 │
 ├── core
-│   ├── scanner.py
+│   ├── scanner.py          # 支持 progress_callback 注入
 │   ├── crawler.py
-│   └── plugin_manager.py
+│   └── plugin_manager.py   # 插件执行时逐步回调进度
 │
 ├── plugins
 │   ├── base_plugin.py
@@ -201,9 +210,9 @@ miniwebscanner
 │   └── report_generator.py
 │
 ├── templates
-│   └── index.html
+│   └── index.html          # AJAX 提交 + SSE 实时进度渲染
 │
-├── webapp.py
+├── webapp.py               # /scan 启动接口 + /progress SSE 流
 ├── main.py
 ├── requirements.txt
 └── README.md
@@ -211,7 +220,37 @@ miniwebscanner
 
 ---
 
-## 九、安装方法
+## 九、实时进度机制
+
+扫描采用 **异步 + SSE（Server-Sent Events）** 架构，解决了原有同步阻塞导致用户长时间等待的问题。
+
+```
+前端                        后端
+ │                            │
+ │── POST /scan ─────────────>│ 立即返回 scan_id
+ │<─ { scan_id } ─────────────│ 后台线程开始扫描
+ │                            │
+ │── GET /progress/{id} ─────>│ 建立 SSE 连接
+ │<─ event: progress ─────────│ 爬虫阶段完成
+ │<─ event: progress ─────────│ 参数扩展完成
+ │<─ event: progress ─────────│ 插件1 完成
+ │<─ event: progress ─────────│ 插件2 完成
+ │        ...                 │        ...
+ │<─ event: done ─────────────│ 扫描结束，附带完整报告
+```
+
+进度百分比分配：
+
+| 阶段 | 进度区间 |
+|------|----------|
+| 爬虫 | 5% → 20% |
+| 参数扩展 | 25% → 35% |
+| 插件扫描（按插件数均分） | 35% → 90% |
+| 报告生成 | 95% → 100% |
+
+---
+
+## 十、安装方法
 
 ### 1 安装 Python
 
@@ -243,7 +282,7 @@ pip install -r requirements.txt
 
 ---
 
-## 十、使用方法
+## 十一、使用方法
 
 ### CLI 扫描
 
@@ -267,30 +306,31 @@ http://127.0.0.1:5000
 
 ---
 
-## 十一、技术实现
+## 十二、技术实现
 
 本项目涉及以下关键技术：
 
 * 爬虫技术（Requests + BeautifulSoup）
 * 插件化架构（Plugin Pattern）
 * Web 框架（Flask）
+* 异步扫描（Threading + Queue）
+* 实时推送（SSE / Server-Sent Events）
 * 漏洞检测逻辑（SQL Injection / XSS）
 * 报告生成（TXT / JSON）
 
 ---
 
-## 十二、扩展方向
+## 十三、扩展方向
 
-* 异步扫描（提高扫描效率）
-* 实时结果刷新（AJAX / WebSocket）
+* 进一步异步化（asyncio / aiohttp 提高爬取效率）
 * 增加更多漏洞检测插件（CSRF、SSRF 等）
 * 扫描任务队列（Celery / Redis）
 * 用户系统与权限管理
-* 可视化图表分析
+* 可视化图表分析（漏洞趋势、风险分布）
 
 ---
 
-## 十三、贡献方式
+## 十四、贡献方式
 
 欢迎参与本项目开发：
 
@@ -300,6 +340,6 @@ http://127.0.0.1:5000
 
 ---
 
-## 十四、许可证
+## 十五、许可证
 
 本项目采用 MIT License 开源协议
