@@ -37,6 +37,9 @@ Mini Web Vulnerability Scanner 是一个基于 Python 实现的轻量级 Web 安
 ### 扫描结果展示
 ![扫描结果展示](images/scan_result.png)
 
+### 现实网页扫描结果展示
+![扫描结果展示](images/scan_example.png)
+
 ---
 
 ## 三、CLI 使用示例
