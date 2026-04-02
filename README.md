@@ -5,7 +5,7 @@
 ![Security](https://img.shields.io/badge/Security-WebScanner-orange.svg)
 ![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
-轻量级 Web 漏洞扫描与可视化分析工具
+一个轻量级 Web 漏洞扫描与可视化分析工具
 
 ---
 
