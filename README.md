@@ -189,6 +189,37 @@ scan_report.json
 
 ---
 
+## 八、项目结构
+
+```text
+miniwebscanner
+│
+├── core
+│   ├── scanner.py          # 支持 progress_callback 注入
+│   ├── crawler.py
+│   └── plugin_manager.py   # 插件执行时逐步回调进度
+│
+├── plugins
+│   ├── base_plugin.py
+│   ├── sql_injection.py
+│   ├── xss_scanner.py
+│   ├── dir_scanner.py
+│   └── header_scanner.py
+│
+├── report
+│   └── report_generator.py
+│
+├── templates
+│   └── index.html          # AJAX 提交 + SSE 实时进度渲染
+│
+├── webapp.py               # /scan 启动接口 + /progress SSE 流
+├── main.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
 ## 九、实时进度机制
 
 扫描采用 **异步 + SSE（Server-Sent Events）** 架构，解决了原有同步阻塞导致用户长时间等待的问题。
