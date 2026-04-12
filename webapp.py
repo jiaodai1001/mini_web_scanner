@@ -15,7 +15,6 @@ logging.basicConfig(
 
 app = Flask(__name__)
 
-
 def run_scan(target):
     logging.info(f"Starting scan for target: {target}")
     scanner = WebScanner(target, depth=2)
