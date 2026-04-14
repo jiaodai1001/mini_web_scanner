@@ -42,9 +42,11 @@ class WebScanner:
         parser = ParameterParser(self.urls)
         param_urls = parser.extract_parameters()
         generated_urls = parser.discover_common_parameters()
+        test_urls = parser.generate_test_urls()  # generate mutation-based test URLs
 
         self.urls.extend(param_urls)
         self.urls.extend(generated_urls)
+        self.urls.extend(test_urls)
         self.urls = list(set(self.urls))
 
         msg = f"Parameter expansion done — {len(self.urls)} total URLs"
